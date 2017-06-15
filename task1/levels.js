@@ -4,7 +4,7 @@ var GAME_LEVELS = [
    "x x    x   x    xx x",
    "x x  x   c x x   x x",
    "x    x   x   x   x x",
-   "xc  xxc  x  cxx   cx",
+   "xc  xxf  x  fxx   cx",
    "x    xx  x  xx     x",
    "x    xc  x  cx   x x",
    "x x  x x c   x   x x",

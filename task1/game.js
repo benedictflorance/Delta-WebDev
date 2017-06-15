@@ -1,9 +1,11 @@
 var actorChars = {
   "@": Player,
-  "c": Coin
+  "c": Coin,
+  "f": Food
 };
+var lifedown=0;
 var scale = 65;
-var life=45,score=0,scorePrev=0;
+var life=60,score=0,scorePrev=0;
 function Level(plan) {
   this.width = plan[0].length;
   this.height = plan.length;
@@ -59,6 +61,12 @@ function Coin(pos)
   else if(random==2) this.type='b';
   else this.type='s';
 }
+function Food(pos)
+{
+  this.pos=pos.plus(new Vector(0,0));
+  this.size=new Vector(1,1);
+}
+Food.prototype.type="food";
 function elt(name, className) {
   var elt = document.createElement(name);
   if (className) elt.className = className;
@@ -71,7 +79,6 @@ function CanvasDisplay(parent, level) {
   this.canvas.height = Math.min(600, level.height * scale);
   parent.appendChild(this.canvas);
   this.cx = this.canvas.getContext("2d");
-
   this.level = level;
   this.animationTime = 0;
   this.viewport = {
@@ -89,8 +96,6 @@ CanvasDisplay.prototype.clear = function() {
 };
 var otherSprites = document.createElement("img");
 otherSprites.src = "img/sprites.png";
-var coin=document.createElement("img");
-coin.src="img/coin.png";
 CanvasDisplay.prototype.drawBackground = function() {
   var view = this.viewport;
   var xStart = Math.floor(view.left);
@@ -108,12 +113,11 @@ CanvasDisplay.prototype.drawBackground = function() {
       else if(tile=="wall")
         tileX=0;
       else if(tile=="exit")
-        {tileX=scale;}
+        tileX=scale;      
       this.cx.drawImage(otherSprites,tileX,0, scale, scale,screenX, screenY, scale, scale);
     }
   }
 };
-
 var playerSprites = document.createElement("img");
 playerSprites.src = "img/player3.png";
 
@@ -143,6 +147,9 @@ CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type)
   if(type=="g")  {this.cx.drawImage(coin,8.5+sprite*width,4.5, width, height,x,y,width,height);}
   else if(type=="b")  this.cx.drawImage(coin,8.5+sprite*width,4.5+1*height, width, height,x,y,width,height);
   else this.cx.drawImage(coin,8.5+sprite*width,4.5+2*height, width, height,x,y,width,height);
+};
+CanvasDisplay.prototype.drawFood=function(x,y,width,height){
+  this.cx.drawImage(otherSprites,3*scale,0, scale, scale,x,y, scale, scale);
 };
 CanvasDisplay.prototype.updateViewport = function() {
   var view = this.viewport, marginw = view.width /2, marginh=view.height/2;
@@ -181,15 +188,21 @@ CanvasDisplay.prototype.drawActors = function() {
     if (actor.type == "player") {
       this.drawPlayer(x, y, width, height);
     }
-    if(actor.type=="g"||actor.type=="b"||actor.type=="s")
+    else if(actor.type=="g"||actor.type=="b"||actor.type=="s")
     {
     this.drawCoin(x, y, width, height,actor.type);
     } 
+    else if(actor.type=="food")
+      this.drawFood(x,y,width,height);
   }, this);
 };
 CanvasDisplay.prototype.drawFrame = function(step) {
   this.animationTime += step;
-
+  if(lifedown==1)
+    if(this.level.status==null)
+    {this.level.status="lost";
+    this.level.finishDelay=1;
+    }
   this.updateViewport();
   this.drawBackground();
   this.drawActors();
@@ -258,6 +271,7 @@ Player.prototype.move = function(step, level, keys) {
   else
     this.pos = newPos;
 };
+Food.prototype.act = function(step,level,keys){};
 Player.prototype.act = function(step, level, keys) {
   this.move(step, level, keys);
   var otherActor = level.actorAt(this);
@@ -282,6 +296,10 @@ Level.prototype.playerTouched = function(type,actor,x,y) {
       score+=20;
     else
       score+=15;}
+    else if(type=="food")
+      {this.actors = this.actors.filter(function(other) {
+      return other != actor;});
+        life+=15;}
 };
 var arrowCodes = {37: "left", 38: "up", 39: "right", 40: "down"};
 function trackKeys(codes) {
@@ -312,16 +330,9 @@ function runAnimation(frameFunc) {
   requestAnimationFrame(frame);
 }
 var arrows = trackKeys(arrowCodes);
-function loseGame(level)
-{
-if(level.status==null)
-{level.status="lost";
-level.finishDelay=1;
-}
-}
+
 function runLevel(level, Display, andThen) {
   var display = new Display(document.body, level);
-  setTimeout(function(){loseGame(level);},60000);
   runAnimation(function(step) {
     level.animate(step, arrows);
     display.drawFrame(step);
@@ -338,13 +349,25 @@ function runGame(plans, Display) {
     runLevel(new Level(plans[n]), Display, function(status) {
       if (status == "lost")
        {score=scorePrev;
+        life=60;
+        lifedown=0;
        startLevel(n);}
       else if (n < plans.length - 1)
         {scorePrev=score;
-        startLevel(n + 1);}
+        life=60;
+        lifedown=0;
+        startLevel(n + 1);
+        }
       else
         console.log("You win!");
     });
   }
   startLevel(0);
 }
+setInterval(function(){
+    if(life!=0)
+      life--;
+    else if(life==0)
+      lifedown=1;
+    console.log(life);},1000);
+setTimeout(function(){lifedown=1;},90000);
