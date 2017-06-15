@@ -1,7 +1,9 @@
 var actorChars = {
-  "@": Player
+  "@": Player,
+  "c": Coin
 };
-var scale = 75;
+var scale = 65;
+var life=45,score=0,scorePrev=0;
 function Level(plan) {
   this.width = plan[0].length;
   this.height = plan.length;
@@ -42,12 +44,21 @@ Vector.prototype.times = function(factor) {
   return new Vector(this.x * factor, this.y * factor);
 };
 function Player(pos) {
-  this.pos = pos.plus(new Vector(0,-0.176));
-  this.size = new Vector(0.9224, 1.176);
+  this.pos = pos.plus(new Vector(0.141,0.08));
+  this.size = new Vector(0.712, 0.91);
   this.speed = new Vector(0, 0);
 }
 Player.prototype.type = "player";
 
+function Coin(pos)
+{
+  this.pos = pos.plus(new Vector(0.1576,0.241));
+  this.size = new Vector(0.6846,0.7589); 
+  var random=Math.floor(Math.random()*3+1);
+  if(random==1) this.type='g';
+  else if(random==2) this.type='b';
+  else this.type='s';
+}
 function elt(name, className) {
   var elt = document.createElement(name);
   if (className) elt.className = className;
@@ -78,7 +89,8 @@ CanvasDisplay.prototype.clear = function() {
 };
 var otherSprites = document.createElement("img");
 otherSprites.src = "img/sprites.png";
-
+var coin=document.createElement("img");
+coin.src="img/coin.png";
 CanvasDisplay.prototype.drawBackground = function() {
   var view = this.viewport;
   var xStart = Math.floor(view.left);
@@ -96,14 +108,14 @@ CanvasDisplay.prototype.drawBackground = function() {
       else if(tile=="wall")
         tileX=0;
       else if(tile=="exit")
-        tileX=scale;
+        {tileX=scale;}
       this.cx.drawImage(otherSprites,tileX,0, scale, scale,screenX, screenY, scale, scale);
     }
   }
 };
 
 var playerSprites = document.createElement("img");
-playerSprites.src = "img/player1.png";
+playerSprites.src = "img/player3.png";
 
 CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
   var player=this.level.player;
@@ -120,9 +132,17 @@ CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
   sprite = Math.floor(this.animationTime * 12) % 6;}
   else
       {pixel=3;sprite=1;}
-
   this.cx.drawImage(playerSprites,sprite*width,pixel*height, width, height,x,y,width,height);
+};
+var coin = document.createElement("img");
+coin.src = "img/coin.png";
 
+CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type)
+{
+  var sprite = Math.floor(this.animationTime * 8) % 9;
+  if(type=="g")  {this.cx.drawImage(coin,8.5+sprite*width,4.5, width, height,x,y,width,height);}
+  else if(type=="b")  this.cx.drawImage(coin,8.5+sprite*width,4.5+1*height, width, height,x,y,width,height);
+  else this.cx.drawImage(coin,8.5+sprite*width,4.5+2*height, width, height,x,y,width,height);
 };
 CanvasDisplay.prototype.updateViewport = function() {
   var view = this.viewport, marginw = view.width /2, marginh=view.height/2;
@@ -160,6 +180,10 @@ CanvasDisplay.prototype.drawActors = function() {
     var y = (actor.pos.y - this.viewport.top) * scale;
     if (actor.type == "player") {
       this.drawPlayer(x, y, width, height);
+    }
+    if(actor.type=="g"||actor.type=="b"||actor.type=="s")
+    {
+    this.drawCoin(x, y, width, height,actor.type);
     } 
   }, this);
 };
@@ -208,8 +232,8 @@ Level.prototype.animate = function(step, keys) {
     step -= thisStep;
   }
 };
-var playerXSpeed = 8;
-var playerYSpeed = 8;
+var playerXSpeed = 7;
+var playerYSpeed = 7;
 Player.prototype.move = function(step, level, keys) {
   this.speed.y=0
   this.speed.x = 0;
@@ -227,9 +251,10 @@ Player.prototype.move = function(step, level, keys) {
   else
   motion= new Vector(0,0);
   var newPos = this.pos.plus(motion);
+  var actor="";//created just for function definition
   var obstacle = level.obstacleAt(newPos, this.size);
   if (obstacle)
-    level.playerTouched(obstacle);
+    level.playerTouched(obstacle,actor,this.pos.x,this.pos.y);
   else
     this.pos = newPos;
 };
@@ -237,13 +262,26 @@ Player.prototype.act = function(step, level, keys) {
   this.move(step, level, keys);
   var otherActor = level.actorAt(this);
   if (otherActor)
-    level.playerTouched(otherActor.type, otherActor);
+    level.playerTouched(otherActor.type,otherActor);
 };
-Level.prototype.playerTouched = function(type, actor) {
+Coin.prototype.act = function(step,level,keys){};
+Level.prototype.playerTouched = function(type,actor,x,y) {
     if (type=="exit") {
+      this.grid[Math.floor(y)][Math.ceil(x)]=null;
       this.status = "won";
       this.finishDelay = 1;
     }
+    else if(type=="b"||type=="g"||type=="s")
+    {
+      this.actors = this.actors.filter(function(other) {
+      return other != actor;
+    });
+    if(type=="g")
+      score+=25;
+    else if(type=="s")
+      score+=20;
+    else
+      score+=15;}
 };
 var arrowCodes = {37: "left", 38: "up", 39: "right", 40: "down"};
 function trackKeys(codes) {
@@ -299,9 +337,11 @@ function runGame(plans, Display) {
   function startLevel(n) {
     runLevel(new Level(plans[n]), Display, function(status) {
       if (status == "lost")
-        startLevel(n);
+       {score=scorePrev;
+       startLevel(n);}
       else if (n < plans.length - 1)
-        startLevel(n + 1);
+        {scorePrev=score;
+        startLevel(n + 1);}
       else
         console.log("You win!");
     });
