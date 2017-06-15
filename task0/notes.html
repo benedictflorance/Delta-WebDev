@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Joe Hacker</title>
+	<link href="notes.css" type="text/css" rel="stylesheet"/>
+	<link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+</head>
+<body id="body">
+<h1>Joe Hacker's Notes Portal</h1><br>
+<p>Made with &#10084 by Benedict</p>
+<div id ="wrapper">
+	<div class="block" data-state="0">
+		<div id="remove">
+		<a href="#" onclick="delNote(event)">Remove</a>
+		</div>
+		<div id="red">
+		<a href="#" onclick="red(event)">High</a>
+		</div>
+		<div id="green">
+		<a href="#" onclick="green(event)">Medium</a>
+		</div>
+		<div id="blue">
+		<a href="#" onclick="blue(event)">Low</a>
+		<br>
+		</div>
+		<div contenteditable="true" id="notes">
+		Type your notes here!
+		</div>
+	</div>
+</div>
+	<br>
+	<a href="addnotes.html" id="add">Add Notes</a>
+	<a href="sortnotes.html" id="sort">Sort Notes</a>
+	<script src="notes.js"></script>
+</body>
+</html>

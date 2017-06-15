@@ -1,0 +1,109 @@
+body{
+	font-family: 'PT Sans', sans-serif;
+	text-align: center;
+	padding: 0px 10px 0px 10px;
+}
+#wrapper{
+	margin: 0px 0px 0px 7vw;
+}
+h1{
+	color: #f24646;
+	font-family: 'Open Sans', sans-serif;
+	text-shadow: 1px 1px 1px #000000;
+	text-align: center;
+	margin-bottom: 5px;
+}
+p{
+	margin-bottom:5px;
+}
+.block{
+	float: left;
+	border-width:3px;
+	border-style: solid;
+	border-radius: 5px;
+	text-align: left;
+	padding:5px 1px 5px 1px;
+	margin: 10px;
+	overflow: scroll;
+	width:350px;
+	height:175px;
+}
+#add{
+	float:left;
+	clear: both;
+	text-align: center;
+	border-style: solid;
+	border-width:3px;
+	padding: 5px;
+	font-weight: bold;
+	margin: 5px 0px 15px 40%;
+}
+#sort{
+	float:left;
+	text-align: center;
+	border-style: solid;
+	border-width:3px;
+	padding: 5px;
+	font-weight: bold;
+	margin: 5px 0px 15px 2%;
+
+}
+[contenteditable]:focus {
+    outline: 0px solid transparent;
+}
+#remove{
+	text-align: center;
+	border-style: solid;
+	border-width: 0px 0px 3px 0px;
+	padding: 5px;
+	margin:0px;
+	font-weight: bold;
+}
+a{	text-decoration: none;
+	color: black;
+}
+#notes{
+	clear:both;
+	padding: 5px;
+	margin: 5px;
+	font-weight: bold;
+
+}
+#red{	float:left;
+		width:33%;
+		font-weight: bold;
+		background: red;
+		text-align: center;
+		margin: 0px 0px 5px 0px;
+		border-width:0px 0px 3px 0px;
+		border-style: solid;
+	}
+#green{
+		float:left;
+		width: 33%;
+		text-align: center;
+		font-weight: bold;
+		background:green;
+		margin: 0px 0px 5px 0px;
+		border-width:0px 0px 3px 0px;
+		border-style: solid;
+}
+#blue{
+	float:left;
+	width:34%;
+	font-weight: bold;
+	background:blue;
+	text-align: center;
+	margin: 0px 0px 5px 0px;
+	border-width:0px 0px 3px 0px;
+	border-style: solid;
+}
+.r{
+	background: red;
+}
+.g{
+	background: green;
+}
+.b{
+	background: blue;
+}
