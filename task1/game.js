@@ -1,11 +1,18 @@
+var canvas1=document.getElementById("statusbar");
+var ctx = canvas1.getContext("2d");
+var bar = document.createElement("img");
+var gold=0,silver=0,bronze=0,level=1,lifedown=0,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90;
+bar.src = "img/status.png";
+var font = new FontFace('gamef','url(http://ff.static.1001fonts.net/n/e/neuropol-x-free.regular.ttf)');
+ctx.drawImage(bar,0,0);
+bar.onload = function() {
+  ctx.drawImage(bar,0,0);
+}
 var actorChars = {
   "@": Player,
   "c": Coin,
   "f": Food
 };
-var lifedown=0;
-var scale = 65;
-var life=60,score=0,scorePrev=0;
 function Level(plan) {
   this.width = plan[0].length;
   this.height = plan.length;
@@ -77,6 +84,7 @@ function CanvasDisplay(parent, level) {
   this.canvas = document.createElement("canvas");
   this.canvas.width = Math.min(800, level.width * scale);
   this.canvas.height = Math.min(600, level.height * scale);
+  this.canvas.id="game";
   parent.appendChild(this.canvas);
   this.cx = this.canvas.getContext("2d");
   this.level = level;
@@ -87,7 +95,6 @@ function CanvasDisplay(parent, level) {
     width: this.canvas.width / scale,
     height: this.canvas.height / scale
   };
-
   this.drawFrame(0);
 }
 
@@ -119,7 +126,7 @@ CanvasDisplay.prototype.drawBackground = function() {
   }
 };
 var playerSprites = document.createElement("img");
-playerSprites.src = "img/player3.png";
+playerSprites.src = "img/player.png";
 
 CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
   var player=this.level.player;
@@ -198,6 +205,32 @@ CanvasDisplay.prototype.drawActors = function() {
 };
 CanvasDisplay.prototype.drawFrame = function(step) {
   this.animationTime += step;
+  var minutes=Math.floor(time/60);
+  var seconds=time-minutes*60;
+  ctx.clearRect(0,0,800,50);
+  ctx.drawImage(bar,0,0);
+  ctx.fillStyle = 'black';
+  ctx.font = 'bold 25px "gamefont"';
+  ctx.fillText(level,14,35);
+  ctx.fillStyle = '#00008B';
+  ctx.font = 'bold 20px "gamefont"';
+  ctx.fillText('Score:'+score,48,33);
+  if(seconds>9)
+  ctx.fillText('0'+minutes+':'+seconds,228,33);
+  else
+  ctx.fillText('0'+minutes+':'+'0'+seconds,228,33);
+  ctx.fillStyle='white';
+  ctx.font = 'bold 18px "gamefont"';
+  ctx.fillText(gold,375,32);
+  ctx.fillText(silver,470,32);
+  ctx.fillText(bronze,562,32);
+  if(life>60)
+  ctx.fillStyle= '#6aff00';
+  else if(life<20)
+  ctx.fillStyle= '#fffa00';
+  else
+  ctx.fillStyle = 'red';
+  ctx.fillRect(663,14,life*1.444,16);
   if(lifedown==1)
     if(this.level.status==null)
     {this.level.status="lost";
@@ -291,11 +324,14 @@ Level.prototype.playerTouched = function(type,actor,x,y) {
       return other != actor;
     });
     if(type=="g")
-      score+=25;
+      {score+=20;
+        gold++;}
     else if(type=="s")
-      score+=20;
+      {score+=15;
+        silver++;}
     else
-      score+=15;}
+      {score+=10;
+        bronze++;}}
     else if(type=="food")
       {this.actors = this.actors.filter(function(other) {
       return other != actor;});
@@ -346,28 +382,39 @@ function runLevel(level, Display, andThen) {
 }
 function runGame(plans, Display) {
   function startLevel(n) {
+    level=n+1;
     runLevel(new Level(plans[n]), Display, function(status) {
       if (status == "lost")
        {score=scorePrev;
+        gold=goldPrev;
+        silver=silverPrev;
+        bronze=bronzePrev;
         life=60;
+        time=90;
         lifedown=0;
-       startLevel(n);}
+        startLevel(n);}
       else if (n < plans.length - 1)
         {scorePrev=score;
+        goldPrev=gold;
+        bronzePrev=bronze;
+        silverPrev=silver;
         life=60;
+        time=90;
         lifedown=0;
         startLevel(n + 1);
         }
       else
-        console.log("You win!");
+       {console.log("You win!");
+     life=0;}
     });
   }
   startLevel(0);
 }
 setInterval(function(){
+    time--;
     if(life!=0)
       life--;
     else if(life==0)
-      lifedown=1;
-    console.log(life);},1000);
+      lifedown=1;},1000);
 setTimeout(function(){lifedown=1;},90000);
+
