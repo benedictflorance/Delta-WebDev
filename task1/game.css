@@ -6,10 +6,3 @@
     font-family: 'gamefont';
     src: url('font/gamefont.ttf');
 }
-#preloadfont {
-  font-family: ;
-  opacity:0;
-  height:0;
-  width:0;
-  display:inline-block;
-}

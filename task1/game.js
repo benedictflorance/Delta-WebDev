@@ -11,7 +11,9 @@ bar.onload = function() {
 var actorChars = {
   "@": Player,
   "c": Coin,
-  "f": Food
+  "f": Food,
+  "l": Enemy, "r":Enemy, "u": Enemy, "d": Enemy,
+  "<": Arrow, ">": Arrow, "^": Arrow, "v":Arrow
 };
 function Level(plan) {
   this.width = plan[0].length;
@@ -74,12 +76,56 @@ function Food(pos)
   this.size=new Vector(1,1);
 }
 Food.prototype.type="food";
+function Enemy(pos,ch)
+{
+  this.pos=pos.plus(new Vector(0.076,0.076));
+  this.size=new Vector(0.923,0.923);
+  if(ch=='l')
+    this.type='enemyl';
+  else if(ch=='r')
+    this.type='enemyr';
+  else if (ch=='u')
+    this.type='enemyu'
+  else
+    this.type='enemyd';
+}
+function Arrow(pos,ch)
+{ 
+  if(ch=='<')
+  {
+    this.type='arrowl';
+    this.pos=pos.plus(new Vector(0.076,0.384));
+    this.size=new Vector(0.923,0.230);
+    this.speed = new Vector(-3, 0);
+  }
+  else if(ch=='>')
+  {
+    this.type='arrowr';
+    this.pos=pos.plus(new Vector(0.076,0.384));
+    this.size=new Vector(0.923,0.230);
+    this.speed = new Vector(3, 0);
+  }
+  else if (ch=='^')
+  {
+    this.type='arrowu'
+    this.pos=pos.plus(new Vector(0.384,0.076));
+    this.size=new Vector(0.230,0.923);
+    this.speed = new Vector(0, -4);
+  }
+  else
+  {
+    this.type='arrowd';
+    this.pos=pos.plus(new Vector(0.384,0.076));
+    this.size=new Vector(0.230,0.923);
+    this.speed = new Vector(0, 4);
+  }
+  this.repeatPos=this.pos;
+}
 function elt(name, className) {
   var elt = document.createElement(name);
   if (className) elt.className = className;
   return elt;
 }
-
 function CanvasDisplay(parent, level) {
   this.canvas = document.createElement("canvas");
   this.canvas.width = Math.min(800, level.width * scale);
@@ -108,6 +154,7 @@ CanvasDisplay.prototype.drawBackground = function() {
   var xStart = Math.floor(view.left);
   var xEnd = Math.ceil(view.left + view.width);
   var yStart = Math.floor(view.top);
+  
   var yEnd = Math.ceil(view.top + view.height);
 
   for (var y = yStart; y < yEnd; y++) {
@@ -137,7 +184,7 @@ CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
   else if(player.speed.y<0)
     pixel=1;
   else if(player.speed.x<0)
-    pixel=2;
+      pixel=2;
   else if(player.speed.x>0)
     pixel=3;
   sprite = Math.floor(this.animationTime * 12) % 6;}
@@ -158,6 +205,28 @@ CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type)
 CanvasDisplay.prototype.drawFood=function(x,y,width,height){
   this.cx.drawImage(otherSprites,3*scale,0, scale, scale,x,y, scale, scale);
 };
+var enemy = document.createElement("img");
+enemy.src = "img/enemy.png";
+CanvasDisplay.prototype.drawEnemy=function(x,y,width,height,type){
+  if(type=='enemyd')
+    this.cx.drawImage(enemy,0,0,width,height,x,y,width,height);
+  else if(type=='enemyr')
+    this.cx.drawImage(enemy,width,0,width,height,x,y,width,height);
+  else if(type=='enemyl')
+    this.cx.drawImage(enemy,2*width,0,width,height,x,y,width,height);
+  else if(type=='enemyu')
+    this.cx.drawImage(enemy,3*width,0,width,height,x,y,width,height);
+};
+CanvasDisplay.prototype.drawArrow=function(x,y,width,height,type,actor){
+    if(type=='arrowd')
+    this.cx.drawImage(enemy,20,60,15,60,x,y,width,height);
+  else if(type=='arrowr')
+    this.cx.drawImage(enemy,60,75,60,15,x,y,width,height);
+  else if(type=='arrowl')
+    this.cx.drawImage(enemy,120,75,60,15,x,y,width,height);
+  else if(type=='arrowu')
+    this.cx.drawImage(enemy,205,60,15,60,x,y,width,height);
+  }
 CanvasDisplay.prototype.updateViewport = function() {
   var view = this.viewport, marginw = view.width /2, marginh=view.height/2;
   var player = this.level.player;
@@ -201,6 +270,10 @@ CanvasDisplay.prototype.drawActors = function() {
     } 
     else if(actor.type=="food")
       this.drawFood(x,y,width,height);
+    else if(actor.type=="enemyr"||actor.type=="enemyl"||actor.type=="enemyu"||actor.type=="enemyd")
+      this.drawEnemy(x,y,width,height,actor.type);
+    else if(actor.type=="arrowr"||actor.type=="arrowl"||actor.type=="arrowu"||actor.type=="arrowd")
+      this.drawArrow(x,y,width,height,actor.type,actor);
   }, this);
 };
 CanvasDisplay.prototype.drawFrame = function(step) {
@@ -230,7 +303,7 @@ CanvasDisplay.prototype.drawFrame = function(step) {
   ctx.fillStyle= '#fffa00';
   else
   ctx.fillStyle = 'red';
-  ctx.fillRect(663,14,life*1.444,16);
+  ctx.fillRect(663,14,life*1.444,15);
   if(lifedown==1)
     if(this.level.status==null)
     {this.level.status="lost";
@@ -241,18 +314,6 @@ CanvasDisplay.prototype.drawFrame = function(step) {
   this.drawActors();
 };
 
-Level.prototype.obstacleAt = function(pos, size) {
-  var xStart = Math.floor(pos.x);
-  var xEnd = Math.ceil(pos.x + size.x);
-  var yStart = Math.floor(pos.y);
-  var yEnd = Math.ceil(pos.y + size.y);
-  for (var y = yStart; y < yEnd; y++) {
-    for (var x = xStart; x < xEnd; x++) {
-      var fieldType = this.grid[y][x];
-      if (fieldType) return fieldType;
-    }
-  }
-};
 Level.prototype.actorAt = function(actor) {
   for (var i = 0; i < this.actors.length; i++) {
     var other = this.actors[i];
@@ -282,7 +343,7 @@ var playerXSpeed = 7;
 var playerYSpeed = 7;
 Player.prototype.move = function(step, level, keys) {
   this.speed.y=0
-  this.speed.x = 0;
+  this.speed.x=0;
   var motion;
   if(keys.left||keys.right){
   if (keys.left) this.speed.x -= playerXSpeed;
@@ -297,22 +358,30 @@ Player.prototype.move = function(step, level, keys) {
   else
   motion= new Vector(0,0);
   var newPos = this.pos.plus(motion);
-  var actor="";//created just for function definition
+  var actor="",player="";//created just for function definition
   var obstacle = level.obstacleAt(newPos, this.size);
   if (obstacle)
-    level.playerTouched(obstacle,actor,this.pos.x,this.pos.y);
+    level.playerTouched(obstacle,actor,player,this.pos.x,this.pos.y);
   else
     this.pos = newPos;
 };
-Food.prototype.act = function(step,level,keys){};
 Player.prototype.act = function(step, level, keys) {
   this.move(step, level, keys);
   var otherActor = level.actorAt(this);
   if (otherActor)
-    level.playerTouched(otherActor.type,otherActor);
+    level.playerTouched(otherActor.type,otherActor,this);
 };
 Coin.prototype.act = function(step,level,keys){};
-Level.prototype.playerTouched = function(type,actor,x,y) {
+Enemy.prototype.act = function(step,level,keys){};
+Arrow.prototype.act = function(step,level,keys){
+    var newPos = this.pos.plus(this.speed.times(step));
+  if (!level.obstacleAt(newPos, this.size))
+    this.pos = newPos;
+  else if (this.repeatPos)
+    this.pos = this.repeatPos;
+};
+Food.prototype.act = function(step,level,keys){};
+Level.prototype.playerTouched = function(type,actor,player,x,y) {
     if (type=="exit") {
       this.grid[Math.floor(y)][Math.ceil(x)]=null;
       this.status = "won";
@@ -336,6 +405,18 @@ Level.prototype.playerTouched = function(type,actor,x,y) {
       {this.actors = this.actors.filter(function(other) {
       return other != actor;});
         life+=15;}
+    else if(type=="enemyr"||type=="enemyl"||type=="enemyu"||type=="enemyd")
+      { 
+      this.actors = this.actors.filter(function(other) {
+      return other!=player;});       
+      lifedown=1; 
+      }
+    else if(type=="arrowr"||type=="arrowl"||type=="arrowu"||type=="arrowd")
+      { 
+      this.actors = this.actors.filter(function(other) {
+      return other!=player;});       
+      lifedown=1; 
+      }  
 };
 var arrowCodes = {37: "left", 38: "up", 39: "right", 40: "down"};
 function trackKeys(codes) {
