@@ -1,3 +1,17 @@
+//audio files
+var bgm=document.getElementById('bgm');
+bgm.play();
+var brick=document.getElementById('brick');
+var coins=document.getElementById('coins');
+var die=document.getElementById('die');
+var enemy=document.getElementById('enemy');
+var enemydie=document.getElementById('enemydie');
+var gunshot=document.getElementById('gunshot');
+var win=document.getElementById('win');
+var newlevel=document.getElementById('newlevel');
+var powerup=document.getElementById('powerup');
+var timer=document.getElementById('timer');
+//other variable declarations
 var canvas1=document.getElementById("statusbar");
 var ctx = canvas1.getContext("2d");
 var bar = document.createElement("img");
@@ -441,6 +455,7 @@ Player.prototype.move = function(step, level, keys) {
     this.pos = newPos;
   if(keys.space&!space&&flag&&pistol)
   {
+  gunshot.play();
   bx=this.pos.x,by=this.pos.y;
   space=true;
   bpixel=pixel;
@@ -476,13 +491,15 @@ var newPos;
     {this.pos = newPos;
     }
    if(obstacle)
-    {space=false;
+    { brick.play();
+      space=false;
      flag=1;
      flag1=1;}
   if(otherActor)
   {if(otherActor.type=="enemyr"||otherActor.type=="enemyl"||otherActor.type=="enemyu"||otherActor.type=="enemyd")
-      level.actors = level.actors.filter(function(other) {
+      {level.actors = level.actors.filter(function(other) {
         return other != otherActor;});
+      enemydie.play();
     if(otherActor.type=="enemyr")
       level.actors = level.actors.filter(function(other) {
         return other != level.right;});
@@ -494,7 +511,7 @@ var newPos;
         return other != level.up;});
     else if(otherActor.type=="enemyd")
       level.actors = level.actors.filter(function(other) {
-        return other != level.down;});
+        return other != level.down;});}
   }
 }
 }
@@ -534,7 +551,7 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       this.finishDelay = 1;
     }
     else if(type=="b"||type=="g"||type=="s")
-    {
+    { coins.play();
       this.actors = this.actors.filter(function(other) {
       return other != actor;
     });
@@ -548,32 +565,38 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       {score+=10*multiply;
         bronze++;}}
     else if(type=="food")
-      {this.actors = this.actors.filter(function(other) {
+      { powerup.play();
+        this.actors = this.actors.filter(function(other) {
       return other != actor;});
         life+=15;}
     else if(type=="enemyr"||type=="enemyl"||type=="enemyu"||type=="enemyd")
-      { 
+      {
+      die.play(); 
       this.actors = this.actors.filter(function(other) {
       return other!=player;});       
       lifedown=1; 
       }
     else if(type=="arrowr"||type=="arrowl"||type=="arrowu"||type=="arrowd")
       { 
+      die.play();
       this.actors = this.actors.filter(function(other) {
       return other!=player;});       
       lifedown=1; 
       }  
     else if(type=="heart")
-      {this.actors = this.actors.filter(function(other) {
+      {powerup.play();
+      this.actors = this.actors.filter(function(other) {
       return other != actor;});
       heart=1;
       life=90;}
     else if(type=="twice")
-      {this.actors = this.actors.filter(function(other) {
+      {powerup.play();
+      this.actors = this.actors.filter(function(other) {
       return other != actor;});
       multiply=2;}
     else if(type=="pistol")
-    {this.actors = this.actors.filter(function(other) {
+    { powerup.play();
+      this.actors = this.actors.filter(function(other) {
       return other != actor;}); 
       pistol=1;
     }
@@ -640,7 +663,8 @@ function runGame(plans, Display) {
         pistol=0;
         startLevel(n);}
       else if (n < plans.length - 1)
-        {scorePrev=score;
+        {newlevel.play();
+        scorePrev=score;
         goldPrev=gold;
         bronzePrev=bronze;
         silverPrev=silver;
@@ -654,10 +678,12 @@ function runGame(plans, Display) {
         startLevel(n + 1);
         }
       else
-       {console.log("You win!");
-        life=90;
+       {
+        life=null;
+        time=null;
         document.getElementById("body").innerHTML+="<canvas width=\"800\" id=\"winner\"height=\"600\"></canvas>";
         var cnt=document.getElementById("winner").getContext("2d");
+        win.play();
         cnt.drawImage(end,0,0);
         cnt.font = 'bold 40px "gamefont"';
         cnt.fillStyle='white';
@@ -669,9 +695,11 @@ function runGame(plans, Display) {
 }
 setInterval(function(){
     time--;
+    if(life==20)
+      timer.play();
     if(life!=0&&!heart)
       life--;
     else if(life==0)
-      lifedown=1;},1000);
-setTimeout(function(){lifedown=1;},90000);
-
+      {die.play();
+      lifedown=1;}},1000);
+setTimeout(function(){if(life!=null){die.play();lifedown=1;}},90000);
