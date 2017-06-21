@@ -1,7 +1,7 @@
 var canvas1=document.getElementById("statusbar");
 var ctx = canvas1.getContext("2d");
 var bar = document.createElement("img");
-var gold=0,silver=0,bronze=0,level=1,lifedown=0,flag=1,flag1=1,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90,heart=0,multiply=1,space=0;
+var gold=0,silver=0,bronze=0,level=1,lifedown=0,flag=1,pistol=0,flag1=1,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90,heart=0,multiply=1,space=0;
 bar.src = "img/status.png";
 ctx.drawImage(bar,0,0);
 bar.onload = function() {
@@ -14,7 +14,8 @@ var actorChars = {
   "l": Enemy, "r":Enemy, "u": Enemy, "d": Enemy,
   "<": Arrow, ">": Arrow, "^": Arrow, "v":Arrow,
   "h": Heart,
-  "2": Twice
+  "2": Twice,
+  "p": Pistol
 };
 function Level(plan) {
   this.width = plan[0].length;
@@ -102,6 +103,12 @@ function Twice(pos)
   this.size=new Vector(1,1);
 }
 Twice.prototype.type="twice";
+function Pistol(pos)
+{
+  this.pos=pos.plus(new Vector(0,0));
+  this.size=new Vector(1,1);
+}
+Pistol.prototype.type="pistol";
 function Bullet()
 {
   this.pos=new Vector(0,0);
@@ -246,6 +253,9 @@ CanvasDisplay.prototype.drawHeart=function(x,y,width,height){
 CanvasDisplay.prototype.drawTwice=function(x,y,width,height){
   this.cx.drawImage(otherSprites,5*scale,0, scale, scale,x,y, scale, scale);
 };
+CanvasDisplay.prototype.drawPistol=function(x,y,width,height){
+  this.cx.drawImage(otherSprites,6*scale,0, scale, scale,x,y, scale, scale);
+};
 CanvasDisplay.prototype.drawBullet=function(x,y,width,height){
   if(space){
   console.log('yeah');
@@ -333,7 +343,9 @@ CanvasDisplay.prototype.drawActors = function() {
     this.drawHeart(x,y,width,height); 
     else if(actor.type=="twice")
     this.drawTwice(x,y,width,height);
-    else if(actor.type=="bullet")
+    else if(actor.type=="pistol")
+    this.drawPistol(x,y,width,height);      
+    else if(actor.type=="bullet"&&pistol)
   this.drawBullet(x,y,width,height);
   }, this);
 
@@ -426,10 +438,9 @@ Player.prototype.move = function(step, level, keys) {
     level.playerTouched(obstacle,actor,player,this.pos.x,this.pos.y);
   else
     this.pos = newPos;
-  if(keys.space&!space&&flag)
+  if(keys.space&!space&&flag&&pistol)
   {
   bx=this.pos.x,by=this.pos.y;
-  console.log(bx,by);
   space=true;
   bpixel=pixel;
   flag=0;
@@ -444,6 +455,7 @@ Player.prototype.act = function(step, level, keys) {
 Coin.prototype.act = function(step,level,keys){};
 Enemy.prototype.act = function(step,level,keys){};
 Heart.prototype.act = function(step,level,keys){};
+Pistol.prototype.act = function(step,level,keys){};
 Twice.prototype.act = function(step,level,keys){};
 Bullet.prototype.move = function(step, level, keys) {
 if(space)
@@ -486,7 +498,7 @@ var newPos;
 }
 }
 Bullet.prototype.act = function(step,level,keys){
-  if(keys.space&&flag1)
+  if(keys.space&&flag1&&pistol)
   {
   if(bpixel==0)
   {this.pos=new Vector(bx+0.23,by+0.846);
@@ -559,6 +571,11 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       {this.actors = this.actors.filter(function(other) {
       return other != actor;});
       multiply=2;}
+    else if(type=="pistol")
+    {this.actors = this.actors.filter(function(other) {
+      return other != actor;}); 
+      pistol=1;
+    }
 };
 var arrowCodes = {32:"space",37: "left", 38: "up", 39: "right", 40: "down"};
 function trackKeys(codes) {
@@ -618,6 +635,7 @@ function runGame(plans, Display) {
         heart=0;
         lifedown=0;
         prevPixel=0;
+        pistol=0;
         startLevel(n);}
       else if (n < plans.length - 1)
         {scorePrev=score;
@@ -630,6 +648,7 @@ function runGame(plans, Display) {
         heart=0;
         lifedown=0;
         prevPixel=0;
+        pistol=0;
         startLevel(n + 1);
         }
       else
