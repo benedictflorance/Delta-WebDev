@@ -1,9 +1,20 @@
-#statusbar,#game{
+#game{
 	margin:0;
-	padding:0;
 	clear: both;
 }
+#statusbar{
+	margin:0;
+	clear: both;
+}
+
 @font-face {
     font-family: 'gamefont';
     src: url('font/gamefont.ttf');
+}
+#begin{
+	margin:2.5px;
+	float:right;
+}
+#end{
+	margin:0px;
 }

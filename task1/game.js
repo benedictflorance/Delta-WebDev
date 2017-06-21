@@ -3,6 +3,8 @@ var ctx = canvas1.getContext("2d");
 var bar = document.createElement("img");
 var gold=0,silver=0,bronze=0,level=1,lifedown=0,flag=1,pistol=0,flag1=1,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90,heart=0,multiply=1,space=0;
 bar.src = "img/status.png";
+var end = document.createElement("img");
+end.src = "img/end.png";
 ctx.drawImage(bar,0,0);
 bar.onload = function() {
   ctx.drawImage(bar,0,0);
@@ -258,7 +260,6 @@ CanvasDisplay.prototype.drawPistol=function(x,y,width,height){
 };
 CanvasDisplay.prototype.drawBullet=function(x,y,width,height){
   if(space){
-  console.log('yeah');
   if(bpixel==0)
   this.cx.drawImage(bullet,0,3,9,40,x,y,9,40);
   else if(bpixel==1)
@@ -620,6 +621,7 @@ function runLevel(level, Display, andThen) {
     }
   });
 }
+
 function runGame(plans, Display) {
   function startLevel(n) {
     level=n+1;
@@ -653,10 +655,17 @@ function runGame(plans, Display) {
         }
       else
        {console.log("You win!");
-     life=0;}
+        life=90;
+        document.getElementById("body").innerHTML+="<canvas width=\"800\" id=\"winner\"height=\"600\"></canvas>";
+        var cnt=document.getElementById("winner").getContext("2d");
+        cnt.drawImage(end,0,0);
+        cnt.font = 'bold 40px "gamefont"';
+        cnt.fillStyle='white';
+        cnt.fillText('Score:'+score,270,500);
+      }
     });
   }
-  startLevel(0);
+  startLevel(0,"begin");
 }
 setInterval(function(){
     time--;
