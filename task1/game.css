@@ -1,6 +1,7 @@
 #statusbar,#game{
 	margin:0;
 	padding:0;
+	clear: both;
 }
 @font-face {
     font-family: 'gamefont';

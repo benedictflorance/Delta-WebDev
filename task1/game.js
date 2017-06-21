@@ -1,9 +1,8 @@
 var canvas1=document.getElementById("statusbar");
 var ctx = canvas1.getContext("2d");
 var bar = document.createElement("img");
-var gold=0,silver=0,bronze=0,level=1,lifedown=0,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90;
+var gold=0,silver=0,bronze=0,level=1,lifedown=0,flag=1,flag1=1,scale=65,life=60,score=0,scorePrev=0,goldPrev=0,silverPrev=0,bronzePrev=0,time=90,heart=0,multiply=1,space=0;
 bar.src = "img/status.png";
-var font = new FontFace('gamef','url(http://ff.static.1001fonts.net/n/e/neuropol-x-free.regular.ttf)');
 ctx.drawImage(bar,0,0);
 bar.onload = function() {
   ctx.drawImage(bar,0,0);
@@ -13,7 +12,9 @@ var actorChars = {
   "c": Coin,
   "f": Food,
   "l": Enemy, "r":Enemy, "u": Enemy, "d": Enemy,
-  "<": Arrow, ">": Arrow, "^": Arrow, "v":Arrow
+  "<": Arrow, ">": Arrow, "^": Arrow, "v":Arrow,
+  "h": Heart,
+  "2": Twice
 };
 function Level(plan) {
   this.width = plan[0].length;
@@ -36,8 +37,21 @@ function Level(plan) {
     }
     this.grid.push(gridLine);
   }
+  this.actors.push(new Bullet());
   this.player = this.actors.filter(function(actor) {
     return actor.type == "player";
+  })[0];
+  this.up = this.actors.filter(function(actor) {
+    return actor.type == "arrowu";
+  })[0];
+  this.down = this.actors.filter(function(actor) {
+    return actor.type == "arrowd";
+  })[0];
+  this.left = this.actors.filter(function(actor) {
+    return actor.type == "arrowl";
+  })[0];
+  this.right = this.actors.filter(function(actor) {
+    return actor.type == "arrowr";
   })[0];
   this.status = this.finishDelay = null;
 }
@@ -76,6 +90,25 @@ function Food(pos)
   this.size=new Vector(1,1);
 }
 Food.prototype.type="food";
+function Heart(pos)
+{
+  this.pos=pos.plus(new Vector(0,0));
+  this.size=new Vector(1,1);
+}
+Heart.prototype.type="heart";
+function Twice(pos)
+{
+  this.pos=pos.plus(new Vector(0,0));
+  this.size=new Vector(1,1);
+}
+Twice.prototype.type="twice";
+function Bullet()
+{
+  this.pos=new Vector(0,0);
+  this.size=new Vector(0,0);
+  this.speed = new Vector(0, 0);
+}
+Bullet.prototype.type="bullet";
 function Enemy(pos,ch)
 {
   this.pos=pos.plus(new Vector(0.076,0.076));
@@ -172,12 +205,14 @@ CanvasDisplay.prototype.drawBackground = function() {
     }
   }
 };
+var bx,by,bpixel;
 var playerSprites = document.createElement("img");
 playerSprites.src = "img/player.png";
-
+var bullet=document.createElement("img");
+bullet.src="img/bullet.png";
+var pixel,sprite,prevPixel=0;
 CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
   var player=this.level.player;
-  var pixel,sprite;
   if (player.speed.x != 0||player.speed.y!=0){
   if(player.speed.y>0)
     pixel=0;
@@ -189,14 +224,14 @@ CanvasDisplay.prototype.drawPlayer = function(x, y, width,height) {
     pixel=3;
   sprite = Math.floor(this.animationTime * 12) % 6;}
   else
-      {pixel=3;sprite=1;}
+    {pixel=prevPixel; sprite=3;}
+  prevPixel=pixel;
   this.cx.drawImage(playerSprites,sprite*width,pixel*height, width, height,x,y,width,height);
 };
 var coin = document.createElement("img");
 coin.src = "img/coin.png";
 
-CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type)
-{
+CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type){
   var sprite = Math.floor(this.animationTime * 8) % 9;
   if(type=="g")  {this.cx.drawImage(coin,8.5+sprite*width,4.5, width, height,x,y,width,height);}
   else if(type=="b")  this.cx.drawImage(coin,8.5+sprite*width,4.5+1*height, width, height,x,y,width,height);
@@ -205,6 +240,26 @@ CanvasDisplay.prototype.drawCoin = function(x,y,width,height,type)
 CanvasDisplay.prototype.drawFood=function(x,y,width,height){
   this.cx.drawImage(otherSprites,3*scale,0, scale, scale,x,y, scale, scale);
 };
+CanvasDisplay.prototype.drawHeart=function(x,y,width,height){
+  this.cx.drawImage(otherSprites,4*scale,0, scale, scale,x,y, scale, scale);
+};
+CanvasDisplay.prototype.drawTwice=function(x,y,width,height){
+  this.cx.drawImage(otherSprites,5*scale,0, scale, scale,x,y, scale, scale);
+};
+CanvasDisplay.prototype.drawBullet=function(x,y,width,height){
+  if(space){
+  console.log('yeah');
+  if(bpixel==0)
+  this.cx.drawImage(bullet,0,3,9,40,x,y,9,40);
+  else if(bpixel==1)
+  this.cx.drawImage(bullet,12,0,11,40,x,y,11,40);
+  else if(bpixel==2)
+  this.cx.drawImage(bullet,23,0,34,10,x,y,34,10);
+  else if(bpixel==3)
+  this.cx.drawImage(bullet,56,0,35,10,x,y,35,10);
+  }
+};
+
 var enemy = document.createElement("img");
 enemy.src = "img/enemy.png";
 CanvasDisplay.prototype.drawEnemy=function(x,y,width,height,type){
@@ -218,7 +273,7 @@ CanvasDisplay.prototype.drawEnemy=function(x,y,width,height,type){
     this.cx.drawImage(enemy,3*width,0,width,height,x,y,width,height);
 };
 CanvasDisplay.prototype.drawArrow=function(x,y,width,height,type,actor){
-    if(type=='arrowd')
+  if(type=='arrowd')
     this.cx.drawImage(enemy,20,60,15,60,x,y,width,height);
   else if(type=='arrowr')
     this.cx.drawImage(enemy,60,75,60,15,x,y,width,height);
@@ -274,7 +329,14 @@ CanvasDisplay.prototype.drawActors = function() {
       this.drawEnemy(x,y,width,height,actor.type);
     else if(actor.type=="arrowr"||actor.type=="arrowl"||actor.type=="arrowu"||actor.type=="arrowd")
       this.drawArrow(x,y,width,height,actor.type,actor);
+    else if(actor.type=="heart")
+    this.drawHeart(x,y,width,height); 
+    else if(actor.type=="twice")
+    this.drawTwice(x,y,width,height);
+    else if(actor.type=="bullet")
+  this.drawBullet(x,y,width,height);
   }, this);
+
 };
 CanvasDisplay.prototype.drawFrame = function(step) {
   this.animationTime += step;
@@ -364,6 +426,14 @@ Player.prototype.move = function(step, level, keys) {
     level.playerTouched(obstacle,actor,player,this.pos.x,this.pos.y);
   else
     this.pos = newPos;
+  if(keys.space&!space&&flag)
+  {
+  bx=this.pos.x,by=this.pos.y;
+  console.log(bx,by);
+  space=true;
+  bpixel=pixel;
+  flag=0;
+  }
 };
 Player.prototype.act = function(step, level, keys) {
   this.move(step, level, keys);
@@ -373,6 +443,69 @@ Player.prototype.act = function(step, level, keys) {
 };
 Coin.prototype.act = function(step,level,keys){};
 Enemy.prototype.act = function(step,level,keys){};
+Heart.prototype.act = function(step,level,keys){};
+Twice.prototype.act = function(step,level,keys){};
+Bullet.prototype.move = function(step, level, keys) {
+if(space)
+{
+var newPos;
+  if(bpixel==0)
+    newPos = this.pos.plus(new Vector(0,4*step));
+  else if(bpixel==1)
+    newPos = this.pos.plus(new Vector(0,-4*step));
+  else if(bpixel==2)
+    newPos = this.pos.plus(new Vector(-4*step,0));
+  else if(bpixel==3)
+    newPos = this.pos.plus(new Vector(4*step,0));
+  var obstacle = level.obstacleAt(newPos, this.size);
+  var otherActor = level.actorAt(this);
+   if (!obstacle)
+    {this.pos = newPos;
+    }
+   if(obstacle)
+    {space=false;
+     flag=1;
+     flag1=1;}
+  if(otherActor)
+  {if(otherActor.type=="enemyr"||otherActor.type=="enemyl"||otherActor.type=="enemyu"||otherActor.type=="enemyd")
+      level.actors = level.actors.filter(function(other) {
+        return other != otherActor;});
+    if(otherActor.type=="enemyr")
+      level.actors = level.actors.filter(function(other) {
+        return other != level.right;});
+    else if(otherActor.type=="enemyl")
+      level.actors = level.actors.filter(function(other) {
+        return other != level.left;});
+    else if(otherActor.type=="enemyu")
+      level.actors = level.actors.filter(function(other) {
+        return other != level.up;});
+    else if(otherActor.type=="enemyd")
+      level.actors = level.actors.filter(function(other) {
+        return other != level.down;});
+  }
+}
+}
+Bullet.prototype.act = function(step,level,keys){
+  if(keys.space&&flag1)
+  {
+  if(bpixel==0)
+  {this.pos=new Vector(bx+0.23,by+0.846);
+  this.size=new Vector(0.1384,0.6153);}
+  else if(bpixel==1)
+  {this.pos=new Vector(bx+0.2615,by-0.6153);
+   this.size=new Vector(0.1692,0.6153);}
+  else if(bpixel==2)
+  { this.pos=new Vector(bx-0.523,by+0.5307);
+    this.size=new Vector(0.523,0.1538);  
+  }
+  else if(bpixel==3)
+  {this.pos=new Vector(bx+0.6923,by+0.5307);
+    this.size=new Vector(0.5384,0.1538);
+  }
+  flag1=0;
+  }
+  this.move(step, level, keys);
+};
 Arrow.prototype.act = function(step,level,keys){
     var newPos = this.pos.plus(this.speed.times(step));
   if (!level.obstacleAt(newPos, this.size))
@@ -393,13 +526,13 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       return other != actor;
     });
     if(type=="g")
-      {score+=20;
+      {score+=20*multiply;
         gold++;}
     else if(type=="s")
-      {score+=15;
+      {score+=15*multiply;
         silver++;}
     else
-      {score+=10;
+      {score+=10*multiply;
         bronze++;}}
     else if(type=="food")
       {this.actors = this.actors.filter(function(other) {
@@ -417,8 +550,17 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       return other!=player;});       
       lifedown=1; 
       }  
+    else if(type=="heart")
+      {this.actors = this.actors.filter(function(other) {
+      return other != actor;});
+      heart=1;
+      life=90;}
+    else if(type=="twice")
+      {this.actors = this.actors.filter(function(other) {
+      return other != actor;});
+      multiply=2;}
 };
-var arrowCodes = {37: "left", 38: "up", 39: "right", 40: "down"};
+var arrowCodes = {32:"space",37: "left", 38: "up", 39: "right", 40: "down"};
 function trackKeys(codes) {
   var pressed = Object.create(null);
   function handler(event) {
@@ -472,7 +614,10 @@ function runGame(plans, Display) {
         bronze=bronzePrev;
         life=60;
         time=90;
+        multiply=1;
+        heart=0;
         lifedown=0;
+        prevPixel=0;
         startLevel(n);}
       else if (n < plans.length - 1)
         {scorePrev=score;
@@ -481,7 +626,10 @@ function runGame(plans, Display) {
         silverPrev=silver;
         life=60;
         time=90;
+        multiply=1;
+        heart=0;
         lifedown=0;
+        prevPixel=0;
         startLevel(n + 1);
         }
       else
@@ -493,7 +641,7 @@ function runGame(plans, Display) {
 }
 setInterval(function(){
     time--;
-    if(life!=0)
+    if(life!=0&&!heart)
       life--;
     else if(life==0)
       lifedown=1;},1000);
