@@ -419,7 +419,9 @@ var maxStep = 0.05;
 Level.prototype.animate = function(step, keys) {
   if (this.status != null)
     this.finishDelay -= step;
-
+  if(time==0)
+    { die.play();
+      lifedown=1;}
   while (step > 0) {
     var thisStep = Math.min(step, maxStep);
     this.actors.forEach(function(actor) {
@@ -568,6 +570,7 @@ Level.prototype.playerTouched = function(type,actor,player,x,y) {
       { powerup.play();
         this.actors = this.actors.filter(function(other) {
       return other != actor;});
+        if(!heart)
         life+=15;}
     else if(type=="enemyr"||type=="enemyl"||type=="enemyu"||type=="enemyd")
       {
@@ -696,11 +699,10 @@ function runGame(plans, Display) {
 setInterval(function(){
     if(time!=null)
     time--;
-    if(life==20)
+    if(life==20||time==20)
       timer.play();
     if(life!=0&&!heart&life!=null)
       life--;
     else if(life==0)
       {die.play();
       lifedown=1;}},1000);
-setTimeout(function(){if(life!=null){die.play();lifedown=1;}},90000);
