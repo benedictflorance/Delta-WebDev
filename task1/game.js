@@ -681,7 +681,7 @@ function runGame(plans, Display) {
        {
         life=null;
         time=null;
-        document.getElementById("body").innerHTML+="<canvas width=\"800\" id=\"winner\"height=\"600\"></canvas>";
+        document.getElementById("body").innerHTML="<canvas width=\"800\" id=\"winner\"height=\"600\"></canvas>";
         var cnt=document.getElementById("winner").getContext("2d");
         win.play();
         cnt.drawImage(end,0,0);
@@ -694,10 +694,11 @@ function runGame(plans, Display) {
   startLevel(0,"begin");
 }
 setInterval(function(){
+    if(time!=null)
     time--;
     if(life==20)
       timer.play();
-    if(life!=0&&!heart)
+    if(life!=0&&!heart&life!=null)
       life--;
     else if(life==0)
       {die.play();
